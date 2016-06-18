@@ -1,364 +1,56 @@
 ﻿#region License
+
 // Advanced DataGridView
 //
 // Copyright (c), 2014 Davide Gironi <davide.gironi@gmail.com>
 // Original work Copyright (c), 2013 Zuby <zuby@me.com>
 //
 // Please refer to LICENSE file for licensing information.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
 namespace Zuby.ADGV
 {
-
-    [System.ComponentModel.DesignerCategory("")]
+    //[DesignerCategory("")]
     public class AdvancedDataGridView : DataGridView
     {
-
-        #region public events
-
-        public event EventHandler SortStringChanged;
-
-        public event EventHandler FilterStringChanged;
-
-        #endregion
-
-        
-        #region class properties
-
-        private List<string> _sortOrderList = new List<string>();
-        private List<string> _filterOrderList = new List<string>();
-        private List<string> _filteredColumns = new List<string>();
-
-        private bool _loadedFilter = false;
-        private string _sortString = null;
-        private string _filterString = null;
-
-        #endregion
-
-
-        /// <summary>
-        /// Get or Set Filter and Sort status
-        /// </summary>
-        public bool FilterAndSortEnabled
-        {
-            get
-            {
-                return _filterAndSortEnabled;
-            }
-            set
-            {
-                _filterAndSortEnabled = value;
-            }
-        }
-        private bool _filterAndSortEnabled = true;
-        
-
         #region constructors
 
-        /// <summary>
-        /// AdvancedDataGridView constructor
-        /// </summary>
-        public AdvancedDataGridView()
-        {
-        }
-
         #endregion
 
+        /// <summary>
+        ///     Get or Set Filter and Sort status
+        /// </summary>
+        public bool FilterAndSortEnabled { get; set; } = true;
 
-        #region public Filter and Sort methods
+        #region cells methods
 
         /// <summary>
-        /// Disable a Filter and Sort on a DataGridViewColumn
+        ///     Get all columns
         /// </summary>
-        /// <param name="column"></param>
-        public void DisableFilterAndSort(DataGridViewColumn column)
-        {
-            if (Columns.Contains(column))
-            {
-                ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
-                if (cell != null)
-                {
-                    if (cell.FilterAndSortEnabled == true && (cell.SortString.Length > 0 || cell.FilterString.Length > 0))
-                    {
-                        CleanFilter(true);
-                        cell.FilterAndSortEnabled = false;
-                    }
-                    else
-                        cell.FilterAndSortEnabled = false;
-                    _filterOrderList.Remove(column.Name);
-                    _sortOrderList.Remove(column.Name);
-                    _filteredColumns.Remove(column.Name);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Enable a Filter and Sort on a DataGridViewColumn
-        /// </summary>
-        /// <param name="column"></param>
-        public void EnableFilterAndSort(DataGridViewColumn column)
-        {
-            //this.DataSource = SortString;
-            if (Columns.Contains(column))
-            {
-                ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
-                if (cell != null)
-                {
-                    if (!cell.FilterAndSortEnabled && (cell.FilterString.Length > 0 || cell.SortString.Length > 0))
-                        CleanFilter(true);
-
-                    cell.FilterAndSortEnabled = true;
-                    _filteredColumns.Remove(column.Name);
-
-                    SetFilterDateAndTimeEnabled(column, cell.IsFilterDateAndTimeEnabled);
-                    SetSortEnabled(column, cell.IsSortEnabled);
-                    SetFilterEnabled(column, cell.IsFilterEnabled);
-                }
-                else
-                {
-                    column.SortMode = DataGridViewColumnSortMode.Programmatic;
-                    cell = new ColumnHeaderCell(column.HeaderCell, true);
-                    cell.SortChanged += new ColumnHeaderCellEventHandler(cell_SortChanged);
-                    cell.FilterChanged += new ColumnHeaderCellEventHandler(cell_FilterChanged);
-                    cell.FilterPopup += new ColumnHeaderCellEventHandler(cell_FilterPopup);
-                    column.MinimumWidth = cell.MinimumSize.Width;
-                    if (ColumnHeadersHeight < cell.MinimumSize.Height)
-                        ColumnHeadersHeight = cell.MinimumSize.Height;
-                    column.HeaderCell = cell;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Load a Filter and Sort preset
-        /// </summary>
-        /// <param name="filter"></param>
-        /// <param name="sorting"></param>
-        public void LoadFilterAndSort(string filter, string sorting)
-        {
-            foreach (ColumnHeaderCell c in FilterableCells)
-                c.SetLoadedMode(true);
-
-            _filteredColumns.Clear();
-
-            _filterOrderList.Clear();
-            _sortOrderList.Clear();
-
-            if (filter != null)
-                FilterString = filter;
-            if (sorting != null)
-                SortString = sorting;
-
-            _loadedFilter = true;
-        }
-
-        /// <summary>
-        /// Clean Filter and Sort
-        /// </summary>
-        public void CleanFilterAndSort()
-        {
-            foreach (ColumnHeaderCell c in FilterableCells)
-                c.SetLoadedMode(false);
-
-            _filteredColumns.Clear();
-            _filterOrderList.Clear();
-            _sortOrderList.Clear();
-
-            _loadedFilter = false;
-
-            CleanFilter();
-            CleanSort();
-        }
-
-        #endregion
-
-
-        #region public Sort methods
-
-        /// <summary>
-        /// Get the Sort string
-        /// </summary>
-        public string SortString
+        private IEnumerable<ColumnHeaderCell> FilterableCells
         {
             get
             {
-                return _sortString == null ? "" : _sortString;
+                return from DataGridViewColumn c in Columns
+                    where c.HeaderCell != null && c.HeaderCell is ColumnHeaderCell
+                    select c.HeaderCell as ColumnHeaderCell;
             }
-            private set
-            {
-                string old = value;
-                if (old != _sortString)
-                {
-                    _sortString = value;
-
-                    if (SortStringChanged != null)
-                        SortStringChanged(this, new EventArgs());
-                }
-            }
-        }
-
-        /// <summary>
-        /// Enabled or disable Sort capabilities for a DataGridViewColumn
-        /// </summary>
-        /// <param name="column"></param>
-        /// <param name="enabled"></param>
-        public void SetSortEnabled(DataGridViewColumn column, bool enabled)
-        {
-            if (Columns.Contains(column))
-            {
-                ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
-                if (cell != null)
-                {
-                    cell.SetSortEnabled(enabled);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Sort ASC
-        /// </summary>
-        public void SortASC(DataGridViewColumn column)
-        {
-            if (Columns.Contains(column))
-            {
-                ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
-                if (cell != null)
-                {
-                    cell.SortASC();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Sort ASC
-        /// </summary>
-        public void SortDESC(DataGridViewColumn column)
-        {
-            if (Columns.Contains(column))
-            {
-                ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
-                if (cell != null)
-                {
-                    cell.SortDESC();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Clean all Sort on all columns
-        /// </summary>
-        /// <param name="fireEvent"></param>
-        public void CleanSort(bool fireEvent)
-        {
-            foreach (ColumnHeaderCell c in FilterableCells)
-                c.CleanSort();
-            _sortOrderList.Clear();
-
-            if (fireEvent)
-                SortString = null;
-            else
-                _sortString = null;
-        }
-        public void CleanSort()
-        {
-            CleanSort(true);
         }
 
         #endregion
-
-
-        #region public Filter methods
-
-        /// <summary>
-        /// Get the Filter string
-        /// </summary>
-        public string FilterString
-        {
-            get
-            {
-                return _filterString == null ? "" : _filterString;
-            }
-            private set
-            {
-                string old = value;
-                if (old != _filterString)
-                {
-                    _filterString = value;
-                    if (FilterStringChanged != null)
-                        FilterStringChanged(this, new EventArgs());
-                }
-            }
-        }
-
-        /// <summary>
-        /// Set FilterDateAndTime status for a DataGridViewColumn
-        /// </summary>
-        /// <param name="column"></param>
-        /// <param name="filterDateAndTimeEnabled"></param>
-        public void SetFilterDateAndTimeEnabled(DataGridViewColumn column, bool filterDateAndTimeEnabled)
-        {
-            if (Columns.Contains(column))
-            {
-                ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
-                if (cell != null)
-                {
-                    cell.IsFilterDateAndTimeEnabled = filterDateAndTimeEnabled;
-                }
-            }
-        }
-        
-        /// <summary>
-        /// Enable or disable Filter capabilities for a DataGridViewColumn
-        /// </summary>
-        /// <param name="column"></param>
-        /// <param name="enabled"></param>
-        public void SetFilterEnabled(DataGridViewColumn column, bool enabled)
-        {
-            if (Columns.Contains(column))
-            {
-                ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
-                if (cell != null)
-                {
-                    cell.SetFilterEnabled(enabled);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Clean Filter on all columns
-        /// </summary>
-        /// <param name="fireEvent"></param>
-        public void CleanFilter(bool fireEvent)
-        {
-            foreach (ColumnHeaderCell c in FilterableCells)
-            {
-                c.CleanFilter();
-            }
-            _filterOrderList.Clear();
-
-            if (fireEvent)
-                FilterString = null;
-            else
-                _filterString = null;
-        }
-        public void CleanFilter()
-        {
-            CleanFilter(true);
-        }
-
-        #endregion
-        
 
         #region public Find methods
 
         /// <summary>
-        /// Find the Cell with the given value
+        ///     Find the Cell with the given value
         /// </summary>
         /// <param name="valueToFind"></param>
         /// <param name="columnName"></param>
@@ -367,9 +59,11 @@ namespace Zuby.ADGV
         /// <param name="isWholeWordSearch"></param>
         /// <param name="isCaseSensitive"></param>
         /// <returns></returns>
-        public DataGridViewCell FindCell(string valueToFind, string columnName, int rowIndex, int columnIndex, bool isWholeWordSearch, bool isCaseSensitive)
+        public DataGridViewCell FindCell(string valueToFind, string columnName, int rowIndex, int columnIndex,
+            bool isWholeWordSearch, bool isCaseSensitive)
         {
-            if (valueToFind != null && RowCount > 0 && ColumnCount > 0 && (columnName == null || (Columns.Contains(columnName) && Columns[columnName].Visible)))
+            if (valueToFind != null && RowCount > 0 && ColumnCount > 0 &&
+                (columnName == null || (Columns.Contains(columnName) && Columns[columnName].Visible)))
             {
                 rowIndex = Math.Max(0, rowIndex);
 
@@ -378,12 +72,12 @@ namespace Zuby.ADGV
 
                 if (columnName != null)
                 {
-                    int c = Columns[columnName].Index;
+                    var c = Columns[columnName].Index;
                     if (columnIndex > c)
                         rowIndex++;
-                    for (int r = rowIndex; r < RowCount; r++)
+                    for (var r = rowIndex; r < RowCount; r++)
                     {
-                        string value = Rows[r].Cells[c].FormattedValue.ToString();
+                        var value = Rows[r].Cells[c].FormattedValue.ToString();
                         if (!isCaseSensitive)
                             value = value.ToLower();
 
@@ -395,14 +89,14 @@ namespace Zuby.ADGV
                 {
                     columnIndex = Math.Max(0, columnIndex);
 
-                    for (int r = rowIndex; r < RowCount; r++)
+                    for (var r = rowIndex; r < RowCount; r++)
                     {
-                        for (int c = columnIndex; c < ColumnCount; c++)
+                        for (var c = columnIndex; c < ColumnCount; c++)
                         {
                             if (!Rows[r].Cells[c].Visible)
                                 continue;
 
-                            string value = Rows[r].Cells[c].FormattedValue.ToString();
+                            var value = Rows[r].Cells[c].FormattedValue.ToString();
                             if (!isCaseSensitive)
                                 value = value.ToLower();
 
@@ -420,48 +114,340 @@ namespace Zuby.ADGV
 
         #endregion
 
-        
-        #region cells methods
+        #region cell events
 
         /// <summary>
-        /// Get all columns
+        ///     Overridden OnCellValueChanged event
         /// </summary>
-        private IEnumerable<ColumnHeaderCell> FilterableCells
+        /// <param name="e"></param>
+        protected override void OnCellValueChanged(DataGridViewCellEventArgs e)
         {
-            get
-            {
-                return from DataGridViewColumn c in Columns
-                       where c.HeaderCell != null && c.HeaderCell is ColumnHeaderCell
-                       select (c.HeaderCell as ColumnHeaderCell);
-            }
+            _filteredColumns.Remove(Columns[e.ColumnIndex].Name);
+            base.OnCellValueChanged(e);
         }
 
         #endregion
 
+        #region public events
+
+        public event EventHandler SortStringChanged;
+
+        public event EventHandler FilterStringChanged;
+
+        #endregion
+
+        #region class properties
+
+        private readonly List<string> _sortOrderList = new List<string>();
+        private readonly List<string> _filterOrderList = new List<string>();
+        private readonly List<string> _filteredColumns = new List<string>();
+
+        private bool _loadedFilter;
+        private string _sortString;
+        private string _filterString;
+
+        #endregion
+
+        #region public Filter and Sort methods
+
+        /// <summary>
+        ///     Disable a Filter and Sort on a DataGridViewColumn
+        /// </summary>
+        /// <param name="column"></param>
+        public void DisableFilterAndSort(DataGridViewColumn column)
+        {
+            if (Columns.Contains(column))
+            {
+                var cell = column.HeaderCell as ColumnHeaderCell;
+                if (cell != null)
+                {
+                    if (cell.FilterAndSortEnabled && (cell.SortString.Length > 0 || cell.FilterString.Length > 0))
+                    {
+                        CleanFilter(true);
+                        cell.FilterAndSortEnabled = false;
+                    }
+                    else
+                        cell.FilterAndSortEnabled = false;
+                    _filterOrderList.Remove(column.Name);
+                    _sortOrderList.Remove(column.Name);
+                    _filteredColumns.Remove(column.Name);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Enable a Filter and Sort on a DataGridViewColumn
+        /// </summary>
+        /// <param name="column"></param>
+        public void EnableFilterAndSort(DataGridViewColumn column)
+        {
+            //this.DataSource = SortString;
+            if (Columns.Contains(column))
+            {
+                var cell = column.HeaderCell as ColumnHeaderCell;
+                if (cell != null)
+                {
+                    if (!cell.FilterAndSortEnabled && (cell.FilterString.Length > 0 || cell.SortString.Length > 0))
+                        CleanFilter(true);
+
+                    cell.FilterAndSortEnabled = true;
+                    _filteredColumns.Remove(column.Name);
+
+                    SetFilterDateAndTimeEnabled(column, cell.IsFilterDateAndTimeEnabled);
+                    SetSortEnabled(column, cell.IsSortEnabled);
+                    SetFilterEnabled(column, cell.IsFilterEnabled);
+                }
+                else
+                {
+                    column.SortMode = DataGridViewColumnSortMode.Programmatic;
+                    cell = new ColumnHeaderCell(column.HeaderCell, true);
+                    cell.SortChanged += cell_SortChanged;
+                    cell.FilterChanged += cell_FilterChanged;
+                    cell.FilterPopup += cell_FilterPopup;
+                    column.MinimumWidth = cell.MinimumSize.Width;
+                    if (ColumnHeadersHeight < cell.MinimumSize.Height)
+                        ColumnHeadersHeight = cell.MinimumSize.Height;
+                    column.HeaderCell = cell;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Load a Filter and Sort preset
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="sorting"></param>
+        public void LoadFilterAndSort(string filter, string sorting)
+        {
+            //foreach (ColumnHeaderCell c in FilterableCells)
+            //    c.SetLoadedMode(true);
+
+            _filteredColumns.Clear();
+
+            _filterOrderList.Clear();
+            _sortOrderList.Clear();
+
+            if (filter != null)
+                FilterString = filter;
+            if (sorting != null)
+                SortString = sorting;
+
+            _loadedFilter = true;
+        }
+
+        /// <summary>
+        ///     Clean Filter and Sort
+        /// </summary>
+        public void CleanFilterAndSort()
+        {
+            foreach (var c in FilterableCells)
+                c.SetLoadedMode(false);
+
+            _filteredColumns.Clear();
+            _filterOrderList.Clear();
+            _sortOrderList.Clear();
+
+            _loadedFilter = false;
+
+            CleanFilter();
+            CleanSort();
+        }
+
+        #endregion
+
+        #region public Sort methods
+
+        /// <summary>
+        ///     Get the Sort string
+        /// </summary>
+        public string SortString
+        {
+            get { return _sortString == null ? "" : _sortString; }
+            private set
+            {
+                var old = value;
+                if (old != _sortString)
+                {
+                    _sortString = value;
+
+                    if (SortStringChanged != null)
+                        SortStringChanged(this, new EventArgs());
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Enabled or disable Sort capabilities for a DataGridViewColumn
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="enabled"></param>
+        public void SetSortEnabled(DataGridViewColumn column, bool enabled)
+        {
+            if (Columns.Contains(column))
+            {
+                var cell = column.HeaderCell as ColumnHeaderCell;
+                if (cell != null)
+                {
+                    cell.SetSortEnabled(enabled);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Sort ASC
+        /// </summary>
+        public void SortASC(DataGridViewColumn column)
+        {
+            if (Columns.Contains(column))
+            {
+                var cell = column.HeaderCell as ColumnHeaderCell;
+                if (cell != null)
+                {
+                    cell.SortASC();
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Sort ASC
+        /// </summary>
+        public void SortDESC(DataGridViewColumn column)
+        {
+            if (Columns.Contains(column))
+            {
+                var cell = column.HeaderCell as ColumnHeaderCell;
+                if (cell != null)
+                {
+                    cell.SortDESC();
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Clean all Sort on all columns
+        /// </summary>
+        /// <param name="fireEvent"></param>
+        public void CleanSort(bool fireEvent)
+        {
+            foreach (var c in FilterableCells)
+                c.CleanSort();
+            _sortOrderList.Clear();
+
+            if (fireEvent)
+                SortString = null;
+            else
+                _sortString = null;
+        }
+
+        public void CleanSort()
+        {
+            CleanSort(true);
+        }
+
+        #endregion
+
+        #region public Filter methods
+
+        /// <summary>
+        ///     Get the Filter string
+        /// </summary>
+        public string FilterString
+        {
+            get { return _filterString == null ? "" : _filterString; }
+            private set
+            {
+                var old = value;
+                if (old != _filterString)
+                {
+                    _filterString = value;
+                    if (FilterStringChanged != null)
+                        FilterStringChanged(this, new EventArgs());
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Set FilterDateAndTime status for a DataGridViewColumn
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="filterDateAndTimeEnabled"></param>
+        public void SetFilterDateAndTimeEnabled(DataGridViewColumn column, bool filterDateAndTimeEnabled)
+        {
+            if (Columns.Contains(column))
+            {
+                var cell = column.HeaderCell as ColumnHeaderCell;
+                if (cell != null)
+                {
+                    cell.IsFilterDateAndTimeEnabled = filterDateAndTimeEnabled;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Enable or disable Filter capabilities for a DataGridViewColumn
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="enabled"></param>
+        public void SetFilterEnabled(DataGridViewColumn column, bool enabled)
+        {
+            if (Columns.Contains(column))
+            {
+                var cell = column.HeaderCell as ColumnHeaderCell;
+                if (cell != null)
+                {
+                    cell.SetFilterEnabled(enabled);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Clean Filter on all columns
+        /// </summary>
+        /// <param name="fireEvent"></param>
+        public void CleanFilter(bool fireEvent)
+        {
+            foreach (var c in FilterableCells)
+            {
+                c.CleanFilter();
+            }
+            _filterOrderList.Clear();
+
+            if (fireEvent)
+                FilterString = null;
+            else
+                _filterString = null;
+        }
+
+        public void CleanFilter()
+        {
+            CleanFilter(true);
+        }
+
+        #endregion
 
         #region column events
 
         /// <summary>
-        /// Overriden  OnColumnAdded event
+        ///     Overriden  OnColumnAdded event
         /// </summary>
         /// <param name="e"></param>
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
         {
             e.Column.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnHeaderCell cell = new ColumnHeaderCell(e.Column.HeaderCell, FilterAndSortEnabled);
-            cell.SortChanged += new ColumnHeaderCellEventHandler(cell_SortChanged);
-            cell.FilterChanged += new ColumnHeaderCellEventHandler(cell_FilterChanged);
-            cell.FilterPopup += new ColumnHeaderCellEventHandler(cell_FilterPopup);
+            var cell = new ColumnHeaderCell(e.Column.HeaderCell, FilterAndSortEnabled);
+            cell.SortChanged += cell_SortChanged;
+            cell.FilterChanged += cell_FilterChanged;
+            cell.FilterPopup += cell_FilterPopup;
             e.Column.MinimumWidth = cell.MinimumSize.Width;
             if (ColumnHeadersHeight < cell.MinimumSize.Height)
                 ColumnHeadersHeight = cell.MinimumSize.Height;
             e.Column.HeaderCell = cell;
-            
+
             base.OnColumnAdded(e);
         }
 
         /// <summary>
-        /// Overridden OnColumnRemoved event
+        ///     Overridden OnColumnRemoved event
         /// </summary>
         /// <param name="e"></param>
         protected override void OnColumnRemoved(DataGridViewColumnEventArgs e)
@@ -470,7 +456,7 @@ namespace Zuby.ADGV
             _filterOrderList.Remove(e.Column.Name);
             _sortOrderList.Remove(e.Column.Name);
 
-            ColumnHeaderCell cell = e.Column.HeaderCell as ColumnHeaderCell;
+            var cell = e.Column.HeaderCell as ColumnHeaderCell;
             if (cell != null)
             {
                 cell.SortChanged -= cell_SortChanged;
@@ -482,11 +468,10 @@ namespace Zuby.ADGV
 
         #endregion
 
-
         #region rows events
 
         /// <summary>
-        /// Overridden OnRowsAdded event
+        ///     Overridden OnRowsAdded event
         /// </summary>
         /// <param name="e"></param>
         protected override void OnRowsAdded(DataGridViewRowsAddedEventArgs e)
@@ -496,7 +481,7 @@ namespace Zuby.ADGV
         }
 
         /// <summary>
-        /// Overridden OnRowsRemoved event
+        ///     Overridden OnRowsRemoved event
         /// </summary>
         /// <param name="e"></param>
         protected override void OnRowsRemoved(DataGridViewRowsRemovedEventArgs e)
@@ -507,40 +492,24 @@ namespace Zuby.ADGV
 
         #endregion
 
-
-        #region cell events
-
-        /// <summary>
-        /// Overridden OnCellValueChanged event
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnCellValueChanged(DataGridViewCellEventArgs e)
-        {
-            _filteredColumns.Remove(Columns[e.ColumnIndex].Name);
-            base.OnCellValueChanged(e);
-        }
-
-        #endregion
-
-
         #region filter events
 
         /// <summary>
-        /// Build the complete Filter string
+        ///     Build the complete Filter string
         /// </summary>
         /// <returns></returns>
         private string BuildFilterString()
         {
-            StringBuilder sb = new StringBuilder("");
-            string appx = "";
+            var sb = new StringBuilder("");
+            var appx = "";
 
-            foreach (string filterOrder in _filterOrderList)
+            foreach (var filterOrder in _filterOrderList)
             {
-                DataGridViewColumn Column = Columns[filterOrder];
+                var Column = Columns[filterOrder];
 
                 if (Column != null)
                 {
-                    ColumnHeaderCell cell = Column.HeaderCell as ColumnHeaderCell;
+                    var cell = Column.HeaderCell as ColumnHeaderCell;
                     if (cell != null)
                     {
                         if (cell.FilterAndSortEnabled && cell.ActiveFilterType != MenuStrip.FilterType.None)
@@ -555,7 +524,7 @@ namespace Zuby.ADGV
         }
 
         /// <summary>
-        /// FilterPopup event
+        ///     FilterPopup event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -563,17 +532,17 @@ namespace Zuby.ADGV
         {
             if (Columns.Contains(e.Column))
             {
-                MenuStrip filterMenu = e.FilterMenu;
-                DataGridViewColumn column = e.Column;
+                var filterMenu = e.FilterMenu;
+                var column = e.Column;
 
-                System.Drawing.Rectangle rect = GetCellDisplayRectangle(column.Index, -1, true);
+                var rect = GetCellDisplayRectangle(column.Index, -1, true);
 
                 if (_filteredColumns.Contains(column.Name))
                     filterMenu.Show(this, rect.Left, rect.Bottom, false);
                 else
                 {
                     _filteredColumns.Add(column.Name);
-                    if (_filterOrderList.Count() > 0 && _filterOrderList.Last() == column.Name)
+                    if (_filterOrderList.Any() && _filterOrderList.Last() == column.Name)
                         filterMenu.Show(this, rect.Left, rect.Bottom, true);
                     else
                         filterMenu.Show(this, rect.Left, rect.Bottom, MenuStrip.GetValuesForFilter(this, column.Name));
@@ -582,7 +551,7 @@ namespace Zuby.ADGV
         }
 
         /// <summary>
-        /// FilterChanged event
+        ///     FilterChanged event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -590,8 +559,8 @@ namespace Zuby.ADGV
         {
             if (Columns.Contains(e.Column))
             {
-                MenuStrip filterMenu = e.FilterMenu;
-                DataGridViewColumn column = e.Column;
+                var filterMenu = e.FilterMenu;
+                var column = e.Column;
 
                 _filterOrderList.Remove(column.Name);
                 if (filterMenu.ActiveFilterType != MenuStrip.FilterType.None)
@@ -602,7 +571,7 @@ namespace Zuby.ADGV
                 if (_loadedFilter)
                 {
                     _loadedFilter = false;
-                    foreach (ColumnHeaderCell c in FilterableCells.Where(f => f.MenuStrip != filterMenu))
+                    foreach (var c in FilterableCells.Where(f => f.MenuStrip != filterMenu))
                         c.SetLoadedMode(false);
                 }
             }
@@ -610,25 +579,24 @@ namespace Zuby.ADGV
 
         #endregion
 
-
         #region sort events
 
         /// <summary>
-        /// Build the complete Sort string
+        ///     Build the complete Sort string
         /// </summary>
         /// <returns></returns>
         private string BuildSortString()
         {
-            StringBuilder sb = new StringBuilder("");
-            string appx = "";
+            var sb = new StringBuilder("");
+            var appx = "";
 
-            foreach (string sortOrder in _sortOrderList)
+            foreach (var sortOrder in _sortOrderList)
             {
-                DataGridViewColumn column = Columns[sortOrder];
+                var column = Columns[sortOrder];
 
                 if (column != null)
                 {
-                    ColumnHeaderCell cell = column.HeaderCell as ColumnHeaderCell;
+                    var cell = column.HeaderCell as ColumnHeaderCell;
                     if (cell != null)
                     {
                         if (cell.FilterAndSortEnabled && cell.ActiveSortType != MenuStrip.SortType.None)
@@ -643,8 +611,30 @@ namespace Zuby.ADGV
             return sb.ToString();
         }
 
+        public ColumnHeaderCell GetsortOrderList()
+        {
+            var sb = new StringBuilder("");
+            var appx = "";
+
+            foreach (var sortOrder in _sortOrderList)
+            {
+                var column = Columns[sortOrder];
+
+                if (column != null)
+                {
+                    var cell = column.HeaderCell as ColumnHeaderCell;
+                    if (cell != null)
+                    {
+                        return cell;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
-        /// SortChanged event
+        ///     SortChanged event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -652,8 +642,8 @@ namespace Zuby.ADGV
         {
             if (Columns.Contains(e.Column))
             {
-                MenuStrip filterMenu = e.FilterMenu;
-                DataGridViewColumn column = e.Column;
+                var filterMenu = e.FilterMenu;
+                var column = e.Column;
 
                 _sortOrderList.Remove(column.Name);
                 if (filterMenu.ActiveSortType != MenuStrip.SortType.None)
@@ -663,7 +653,5 @@ namespace Zuby.ADGV
         }
 
         #endregion
-
-
     }
 }

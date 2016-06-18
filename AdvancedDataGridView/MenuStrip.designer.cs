@@ -57,9 +57,7 @@ namespace Zuby.ADGV
             // MenuStrip
             //
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.AutoSize = false;
-            this.Padding = new System.Windows.Forms.Padding(0);
-            this.Margin = new System.Windows.Forms.Padding(0);
+            //this.AutoSize = false;
             this.Size = new System.Drawing.Size(287, 340);
             this.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(MenuStrip_Closed);
             this.LostFocus += new System.EventHandler(MenuStrip_LostFocus);
@@ -78,7 +76,7 @@ namespace Zuby.ADGV
             // sortASCMenuItem
             //
             this.sortASCMenuItem.Name = "sortASCMenuItem";
-            this.sortASCMenuItem.AutoSize = false;
+            //this.sortASCMenuItem.AutoSize = false;
             this.sortASCMenuItem.Size = new System.Drawing.Size(Width - 1, 22);
             this.sortASCMenuItem.Click += new System.EventHandler(sortASCMenuItem_Click);
             this.sortASCMenuItem.MouseEnter += new System.EventHandler(sortASCMenuItem_MouseEnter);
@@ -87,7 +85,7 @@ namespace Zuby.ADGV
             // sortDESCMenuItem
             //
             this.sortDESCMenuItem.Name = "sortDESCMenuItem";
-            this.sortDESCMenuItem.AutoSize = false;
+            //this.sortDESCMenuItem.AutoSize = false;
             this.sortDESCMenuItem.Size = new System.Drawing.Size(Width - 1, 22);
             this.sortDESCMenuItem.Click += new System.EventHandler(sortDESCMenuItem_Click);
             this.sortDESCMenuItem.MouseEnter += new System.EventHandler(sortDESCMenuItem_MouseEnter);
@@ -97,7 +95,7 @@ namespace Zuby.ADGV
             //
             this.cancelSortMenuItem.Name = "cancelSortMenuItem";
             this.cancelSortMenuItem.Enabled = false;
-            this.cancelSortMenuItem.AutoSize = false;
+            //this.cancelSortMenuItem.AutoSize = false;
             this.cancelSortMenuItem.Size = new System.Drawing.Size(Width - 1, 22);
             this.cancelSortMenuItem.Text = _textStrings["CLEARSORT"].ToString();
             this.cancelSortMenuItem.Click += new System.EventHandler(cancelSortMenuItem_Click);
@@ -112,7 +110,7 @@ namespace Zuby.ADGV
             //
             this.cancelFilterMenuItem.Name = "cancelFilterMenuItem";
             this.cancelFilterMenuItem.Enabled = false;
-            this.cancelFilterMenuItem.AutoSize = false;
+            //this.cancelFilterMenuItem.AutoSize = false;
             this.cancelFilterMenuItem.Size = new System.Drawing.Size(Width - 1, 22);
             this.cancelFilterMenuItem.Text = _textStrings["CLEARFILTER"].ToString();
             this.cancelFilterMenuItem.Click += new System.EventHandler(cancelFilterMenuItem_Click);
@@ -210,18 +208,18 @@ namespace Zuby.ADGV
             this.button_ok.Name = "button_ok";
             this.button_ok.BackColor = System.Windows.Forms.Button.DefaultBackColor;
             this.button_ok.UseVisualStyleBackColor = true;
-            this.button_ok.Margin = new System.Windows.Forms.Padding(0);
             this.button_ok.Size = new System.Drawing.Size(75, 23);
             this.button_ok.Text = _textStrings["BUTTONOK"].ToString();
             this.button_ok.Click += new System.EventHandler(button_ok_Click);
             this.button_ok.Location = new System.Drawing.Point(this.checkFilterListButtonsPanel.Width - 164, 0);
+            button_ok.AutoSize = true;
             //
             // button_cancel
             //
+            button_cancel.AutoSize = true;
             this.button_cancel.Name = "button_cancel";
             this.button_cancel.BackColor = System.Windows.Forms.Button.DefaultBackColor;
             this.button_cancel.UseVisualStyleBackColor = true;
-            this.button_cancel.Margin = new System.Windows.Forms.Padding(0);
             this.button_cancel.Size = new System.Drawing.Size(75, 23);
             this.button_cancel.Text = _textStrings["BUTTONCANCEL"].ToString();
             this.button_cancel.Click += new System.EventHandler(button_cancel_Click);
@@ -231,9 +229,7 @@ namespace Zuby.ADGV
             //
             this.resizeBoxControlHost.Name = "resizeBoxControlHost";
             this.resizeBoxControlHost.Control.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
-            this.resizeBoxControlHost.AutoSize = false;
-            this.resizeBoxControlHost.Padding = new System.Windows.Forms.Padding(0);
-            this.resizeBoxControlHost.Margin = new System.Windows.Forms.Padding(Width - 45, 0, 0, 0);
+            //this.resizeBoxControlHost.AutoSize = false;
             this.resizeBoxControlHost.Size = new System.Drawing.Size(10, 10);
             this.resizeBoxControlHost.Paint += new System.Windows.Forms.PaintEventHandler(resizeBoxControlHost_Paint);
             this.resizeBoxControlHost.MouseDown += new System.Windows.Forms.MouseEventHandler(resizeBoxControlHost_MouseDown);
@@ -243,36 +239,29 @@ namespace Zuby.ADGV
             // checkFilterListControlHost
             //
             this.checkFilterListControlHost.Name = "checkFilterListControlHost";
-            this.checkFilterListControlHost.AutoSize = false;
+            //this.checkFilterListControlHost.AutoSize = false;
             this.checkFilterListControlHost.Size = new System.Drawing.Size(Width - 35, 180);
-            this.checkFilterListControlHost.Padding = new System.Windows.Forms.Padding(0);
-            this.checkFilterListControlHost.Margin = new System.Windows.Forms.Padding(0);
-            //
+            
             // checkFilterListButtonsControlHost
             //
             this.checkFilterListButtonsControlHost.Name = "checkFilterListButtonsControlHost";
-            this.checkFilterListButtonsControlHost.AutoSize = false;
+            //this.checkFilterListButtonsControlHost.AutoSize = false;
             this.checkFilterListButtonsControlHost.Size = new System.Drawing.Size(Width - 35, 24);
             this.checkFilterListButtonsControlHost.Padding = new System.Windows.Forms.Padding(0);
-            this.checkFilterListButtonsControlHost.Margin = new System.Windows.Forms.Padding(0);
             //
             // checkFilterListPanel
             //
             this.checkFilterListPanel.Name = "checkFilterListPanel";
-            this.checkFilterListPanel.AutoSize = false;
+            //this.checkFilterListPanel.AutoSize = false;
             this.checkFilterListPanel.Size = checkFilterListControlHost.Size;
-            this.checkFilterListPanel.Padding = new System.Windows.Forms.Padding(0);
-            this.checkFilterListPanel.Margin = new System.Windows.Forms.Padding(0);
-            this.checkFilterListPanel.BackColor = BackColor;
+             this.checkFilterListPanel.BackColor = BackColor;
             this.checkFilterListPanel.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.checkFilterListPanel.Controls.Add(checkList);
             //
             // checkList
             //
             this.checkList.Name = "checkList";
-            this.checkList.AutoSize = false;
-            this.checkList.Padding = new System.Windows.Forms.Padding(0);
-            this.checkList.Margin = new System.Windows.Forms.Padding(0);
+            //this.checkList.AutoSize = false;
             this.checkList.Bounds = new System.Drawing.Rectangle(4, 4, this.checkFilterListPanel.Width - 8, this.checkFilterListPanel.Height - 8);
             this.checkList.StateImageList = GetCheckListStateImages();
             this.checkList.CheckBoxes = false;
@@ -285,11 +274,9 @@ namespace Zuby.ADGV
             // checkFilterListButtonsPanel
             //
             this.checkFilterListButtonsPanel.Name = "checkFilterListButtonsPanel";
-            this.checkFilterListButtonsPanel.AutoSize = false;
+            //this.checkFilterListButtonsPanel.AutoSize = false;
             this.checkFilterListButtonsPanel.Size = checkFilterListButtonsControlHost.Size;
-            this.checkFilterListButtonsPanel.Padding = new System.Windows.Forms.Padding(0);
-            this.checkFilterListButtonsPanel.Margin = new System.Windows.Forms.Padding(0);
-            this.checkFilterListButtonsPanel.BackColor = BackColor;
+             this.checkFilterListButtonsPanel.BackColor = BackColor;
             this.checkFilterListButtonsPanel.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.checkFilterListButtonsPanel.Controls.AddRange(new System.Windows.Forms.Control[] {
             button_ok,

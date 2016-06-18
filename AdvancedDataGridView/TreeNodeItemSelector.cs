@@ -1,21 +1,22 @@
 ﻿#region License
+
 // Advanced DataGridView
 //
 // Copyright (c), 2014 Davide Gironi <davide.gironi@gmail.com>
 // Original work Copyright (c), 2013 Zuby <zuby@me.com>
 //
 // Please refer to LICENSE file for licensing information.
+
 #endregion
 
-using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace Zuby.ADGV
 {
-    [System.ComponentModel.DesignerCategory("")]
+    [DesignerCategory("")]
     internal class TreeNodeItemSelector : TreeNode
     {
-
         #region public enum
 
         public enum CustomNodeType : byte
@@ -28,25 +29,16 @@ namespace Zuby.ADGV
 
         #endregion
 
-
-        #region class properties
-
-        private CheckState _checkState = CheckState.Unchecked;
-        private TreeNodeItemSelector _parent;
-
-        #endregion
-
-
         #region constructor
 
         /// <summary>
-        /// TreeNodeItemSelector constructor
+        ///     TreeNodeItemSelector constructor
         /// </summary>
         /// <param name="text"></param>
         /// <param name="value"></param>
         /// <param name="state"></param>
         /// <param name="nodeType"></param>
-        private TreeNodeItemSelector(String text, object value, CheckState state, CustomNodeType nodeType)
+        private TreeNodeItemSelector(string text, object value, CheckState state, CustomNodeType nodeType)
             : base(text)
         {
             CheckState = state;
@@ -56,16 +48,15 @@ namespace Zuby.ADGV
 
         #endregion
 
-
         #region public clone method
 
         /// <summary>
-        /// Clone a Node
+        ///     Clone a Node
         /// </summary>
         /// <returns></returns>
         public new TreeNodeItemSelector Clone()
         {
-            TreeNodeItemSelector n = new TreeNodeItemSelector(Text, Value, _checkState, NodeType);
+            var n = new TreeNodeItemSelector(Text, Value, _checkState, NodeType);
 
             n.NodeFont = NodeFont;
 
@@ -80,61 +71,54 @@ namespace Zuby.ADGV
 
         #endregion
 
+        #region class properties
+
+        private CheckState _checkState = CheckState.Unchecked;
+        private TreeNodeItemSelector _parent;
+
+        #endregion
 
         #region public getters / setters
 
         /// <summary>
-        /// Get Node NodeType
+        ///     Get Node NodeType
         /// </summary>
-        public CustomNodeType NodeType { get; private set; }
+        public CustomNodeType NodeType { get; }
 
         /// <summary>
-        /// Get Node value
+        ///     Get Node value
         /// </summary>
-        public object Value { get; private set; }
+        public object Value { get; }
 
         /// <summary>
-        /// Get Node parent
+        ///     Get Node parent
         /// </summary>
-        new public TreeNodeItemSelector Parent
+        public new TreeNodeItemSelector Parent
         {
             get
             {
                 if (_parent is TreeNodeItemSelector)
                     return _parent;
-                else
-                    return null;
+                return null;
             }
-            set
-            {
-                _parent = value;
-            }
+            set { _parent = value; }
         }
 
         /// <summary>
-        /// Node is Checked
+        ///     Node is Checked
         /// </summary>
-        new public bool Checked
+        public new bool Checked
         {
-            get
-            {
-                return _checkState == CheckState.Checked;
-            }
-            set
-            {
-                CheckState = (value == true ? CheckState.Checked : CheckState.Unchecked);
-            }
+            get { return _checkState == CheckState.Checked; }
+            set { CheckState = value ? CheckState.Checked : CheckState.Unchecked; }
         }
 
         /// <summary>
-        /// Get or Set the current Node CheckState
+        ///     Get or Set the current Node CheckState
         /// </summary>
         public CheckState CheckState
         {
-            get
-            {
-                return _checkState;
-            }
+            get { return _checkState; }
             set
             {
                 _checkState = value;
@@ -157,11 +141,10 @@ namespace Zuby.ADGV
 
         #endregion
 
-
         #region public create nodes methods
 
         /// <summary>
-        /// Create a Node
+        ///     Create a Node
         /// </summary>
         /// <param name="text"></param>
         /// <param name="value"></param>
@@ -174,7 +157,7 @@ namespace Zuby.ADGV
         }
 
         /// <summary>
-        /// Create a child Node
+        ///     Create a child Node
         /// </summary>
         /// <param name="text"></param>
         /// <param name="value"></param>
@@ -195,13 +178,14 @@ namespace Zuby.ADGV
 
             return n;
         }
+
         public TreeNodeItemSelector CreateChildNode(string text, object value)
         {
             return CreateChildNode(text, value, _checkState);
         }
 
         /// <summary>
-        /// Add a child Node to this Node
+        ///     Add a child Node to this Node
         /// </summary>
         /// <param name="child"></param>
         protected void AddChild(TreeNodeItemSelector child)
@@ -211,6 +195,5 @@ namespace Zuby.ADGV
         }
 
         #endregion
-
     }
 }
