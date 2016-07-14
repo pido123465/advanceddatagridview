@@ -270,8 +270,7 @@ namespace Zuby.ADGV
                 {
                     _sortString = value;
 
-                    if (SortStringChanged != null)
-                        SortStringChanged(this, new EventArgs());
+                    SortStringChanged(this, new EventArgs());
                 }
             }
         }
